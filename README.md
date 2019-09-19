@@ -1,7 +1,7 @@
 # Nginx + SSI + memcached + PHP
-This docker show how to configure `Nxginx` with `SSI` (Server Side
-Include). Additionally some `PHP` result can stored in `Memcached` and
-used by Niginx. More information how it work see section Details.
+This docker show how to configure `Nginx` with `SSI` (Server Side
+Include). Additionally some `PHP` results can stored in `Memcached` and
+reused by Niginx. More information how it work see section Details.
 
 ## Run
 First run docker: 
