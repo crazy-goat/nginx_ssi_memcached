@@ -1,7 +1,7 @@
 FROM nginx:alpine
-COPY default.conf /etc/nginx/conf.d/default.conf
+COPY config/default.conf /etc/nginx/conf.d/default.conf
 COPY www /var/www
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 RUN apk update \
     && apk add 	php7 php7-fpm php7-session supervisor memcached libmemcached \
