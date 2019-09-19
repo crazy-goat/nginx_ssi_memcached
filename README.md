@@ -26,7 +26,7 @@ php in memcached. See diagram below how it works:
 
 
 #### Request flow
-![Nginx SSI](https://raw.githubusercontent.com/crazy-goat/nginx_ssi_memcached/nginx-ssi.png)
+![Nginx SSI](https://github.com/crazy-goat/nginx_ssi_memcached/blob/master/docs/nginx-ssi.png)
 
 Workflow:
 1. Clients send request to nginx.
