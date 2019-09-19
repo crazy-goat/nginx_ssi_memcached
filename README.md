@@ -23,3 +23,5 @@ docker build --no-cache -t crazygoat/nginx_ssi_memcached .
 ## Details
 
 TODO
+
+![Image of Yaktocat](https://octodex.github.com/images/yaktocat.png)
