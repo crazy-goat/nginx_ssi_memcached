@@ -92,8 +92,7 @@ we can pass key to php-fpm using `fastcgi_param`.
         ...
     }
 ```
-In PHP script it can be accessed trough variable `$_SERVER['HTTP_X_MEMCACHED_KEY']`.
-
+In PHP script it can be accessed through variable `$_SERVER['HTTP_X_MEMCACHED_KEY']`.
 
 #### Saving response to cache
 Script below prints time. If `x-memcached-key` header is set and `time`
