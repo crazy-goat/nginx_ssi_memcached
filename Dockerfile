@@ -10,6 +10,7 @@ RUN apk update \
     && pecl install memcached \
     && echo "extension=memcached.so" > /etc/php7/conf.d/memcached.ini \
     && apk del php7-pear php7-dev php7-openssl libmemcached-dev ca-certificates g++ make \
-    && rm -rf /var/cache/apk/*
+    && rm -rf /var/cache/apk/* \
+    && rm -rf /tmp/*
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
