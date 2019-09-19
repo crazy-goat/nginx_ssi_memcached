@@ -3,6 +3,9 @@ This docker show how to configure `Nginx` with `SSI` (Server Side
 Include). Additionally some `PHP` results can stored in `Memcached` and
 reused by Niginx. More information how it work see section Details.
 
+## Demo
+Working demo can be found [here](https://demo-nginx-ssi.crazy-goat.com/)
+
 ## Run
 First run docker: 
 
