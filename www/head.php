@@ -1,3 +1,8 @@
+<?php
+declare(strict_types=1);
+include_once "cache.php";
+ob_start();
+?>
 <style>
 /* Sticky footer styles
 -------------------------------------------------- */
@@ -41,3 +46,5 @@ code {
 <title>Test Nginx SSI</title>
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 <meta name="ROBOTS" content="NOINDEX,NOFOLLOW,NOARCHIVE" /></head>
+
+<?= cache_nginx(ob_get_clean());
