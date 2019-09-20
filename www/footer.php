@@ -5,7 +5,7 @@ ob_start();
 ?>
     <footer class="footer">
         <div class="container">
-            <span class="text-muted"><a href="https://crazy-goat.com">Crazy Goat Software</a> - Nginx + SSI + cache example</span>
+            <span class="text-muted"><a href="https://crazy-goat.com">Crazy Goat Software</a>  <?= date('Y') ?> - Nginx + SSI + cache example</span>
         </div>
     </footer>
 <?php
