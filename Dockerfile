@@ -1,16 +1,15 @@
-FROM nginx:alpine
-COPY config/default.conf /etc/nginx/conf.d/default.conf
+FROM golang:alpine AS golang_build
+RUN apk add --no-cache --update git && \
+    git clone https://github.com/ochinchina/supervisord.git && \
+    cd supervisord && \
+    GOOS=linux go build -a -ldflags '-s -w' -o /usr/local/bin/supervisord github.com/ochinchina/supervisord
+
+FROM alpine:3.18
+RUN apk add --no-cache php82-fpm php82-pecl-memcached nginx memcached
+COPY --from=golang_build /usr/local/bin/supervisord /usr/bin/supervisord
+COPY config/default.conf /etc/nginx/http.d/default.conf
 COPY www /var/www
 COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-RUN apk update \
-    && apk add 	php7 php7-fpm php7-session supervisor memcached libmemcached \
-		php7-pear php7-dev php7-openssl libmemcached-dev ca-certificates g++ make \
-    && pecl channel-update pecl.php.net \
-    && pecl install memcached \
-    && echo "extension=memcached.so" > /etc/php7/conf.d/memcached.ini \
-    && apk del php7-pear php7-dev php7-openssl libmemcached-dev ca-certificates g++ make \
-    && rm -rf /var/cache/apk/* \
-    && rm -rf /tmp/*
+RUN rm -rf /tmp/*
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

@@ -20,7 +20,7 @@ time.
 To build locally this docker just run command below:
 
 ```shell
-docker build --no-cache -t crazygoat/nginx_ssi_memcached .
+docker build --rm -t crazygoat/nginx_ssi_memcached .
 ```
 
 ## Details
@@ -29,7 +29,7 @@ php in memcached. See diagram below how it works:
 
 
 #### Request flow
-![Nginx SSI](https://github.com/crazy-goat/nginx_ssi_memcached/blob/master/docs/nginx-ssi.png)
+![Nginx SSI](https://raw.githubusercontent.com/crazy-goat/nginx_ssi_memcached/master/docs/nginx-ssi.png)
 
 Workflow:
 1. Clients send request to nginx.
