@@ -11,5 +11,4 @@ COPY config/default.conf /etc/nginx/http.d/default.conf
 COPY www /var/www
 COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN rm -rf /tmp/*
-
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
