@@ -60,13 +60,13 @@ server {
 } 
 ```
 
-No every response is checked for valid ssi command. For example:
+Now every response is checked for valid ssi command. For example:
 ```html
-<p class="lead">Time: <!--# include virtual="/time.php" --></p>
+<p class="lead">Time: <!--# include virtual="/_ssi/time.php" --></p>
 ``` 
 
-Nginx will make sub-request for `/time.php` and the response replace comment tag
-`<!--# include virtual="/time.php" -->`.
+Nginx will make sub-request for `/_ssi/time.php` and the response replace comment tag
+`<!--# include virtual="/_ssi/time.php" -->`.
 
 ### Enabling memcached
 If nginx make sub-request for PHP script we have to check if response already exist
