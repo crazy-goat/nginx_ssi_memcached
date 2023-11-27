@@ -1,44 +1,55 @@
 # Nginx + SSI + memcached + PHP
 This docker show how to configure `Nginx` with `SSI` (Server Side
-Include). Additionally some `PHP` results can stored in `Memcached` and
-reused by Niginx. More information how it work see section Details.
+Include). Additionally, some `PHP` results can be stored in `Memcached` and
+reused by Nginx. More information how it works see section [Details](#details).
 
-## Demo
-Working demo can be found [here](https://demo-nginx-ssi.crazy-goat.com/)
+This demo is very simple and uses only raw php. It is no using any framework or`composer` dependencies.
+**It is not production ready solution!**
 
-## Run
-First run docker: 
+## Live demo
+Working demo can be found [here](https://nginx-ssi-memcached-ncz5ytyyqq-ew.a.run.app/)
 
+## Docker images
+To run this demo using docker run this command: 
 ```shell
 docker run --rm  --name nginx_ssi -p 9999:80 crazygoat/nginx_ssi_memcached
 ```
+then visit [http://127.0.0.1:9999](http://127.0.0.1:9999) in your favorite browser.
 
-next visit [http://127.0.0.1:9999](http://127.0.0.1:9999) and check 
-time.
-
-## Build
-To build locally this docker just run command below:
-
+To build locally just run command below:
 ```shell
 docker build --rm -t crazygoat/nginx_ssi_memcached .
 ```
 
 ## Details
-Our goal is to enable ssi in nginx and cache content served from
-php in memcached. See diagram below how it works:
+Our goal is to enable `ssi` in `nginx` and optionally cache content from
+php in `memcached` cache. Only content of `*.php` files is cached. 
+Html files will be served directly from nginx without memcached lookup.
 
+See diagram below how it works:
 
-#### Request flow
+### Page structure
+The page `index.html` consist of 4 SSI blocks: `head.html`, `menu.html`, `content.html` and `footer.html`
+Additionally `content.html` include 2 blocks `time.php` one with cache and one without cache.
+All SII blocks are placed in `_ssi` directory. This directory is marked as `internal` so
+it can't be accessed via http request.
+
+![SSI Components](https://raw.githubusercontent.com/crazy-goat/nginx_ssi_memcached/master/docs/ssi-components.png)
+
+### Request flow
 ![Nginx SSI](https://raw.githubusercontent.com/crazy-goat/nginx_ssi_memcached/master/docs/nginx-ssi.png)
 
 Workflow:
 1. Clients send request to nginx.
-1. Nginx parse index.html and send request for SSI sub-request.
-1. If sub-request is in memcached it is served from memcached
-1. If sub-request is not in memcached it is passed to php-fpm 
-1. Php-fpm executes script and sets cache.
+2. Nginx parse `index.html` and make all necessary sub-request if any SSI tag is present.
+3. Html files are included without cache lookup.
+4. PHP files has additional check if key exist in memcached: 
+   - If sub-request key exits in memcached it is served from memcached.
+   - If sub-request key does not exist in memcached it is passed to `php-fpm`. 
+   - `php-fpm` executes script send response content to memcached and nginx.
+5. Nginx return `index.html` content to the client.
 
-#### Enabling SSI
+### Enabling SSI
 SSI in nginx is disabled by default, so we need to enable it. We can do this
 by adding `ssi on;` in nginx configuration file in `server` or `location` block.
 
@@ -49,16 +60,15 @@ server {
 } 
 ```
 
-No every response is check for valid ssi command. For example:
+No every response is checked for valid ssi command. For example:
 ```html
 <p class="lead">Time: <!--# include virtual="/time.php" --></p>
 ``` 
 
-Nginx will make sub-request for `/time.php` and insert response between
-`<!--#` and `-->`.
+Nginx will make sub-request for `/time.php` and the response replace comment tag
+`<!--# include virtual="/time.php" -->`.
 
-
-#### Enabling memcached
+### Enabling memcached
 If nginx make sub-request for PHP script we have to check if response already exist
 in memcached. If key exists we return content. If not (or some error) send
 request to php-fpm. 
@@ -80,44 +90,54 @@ location ~ \.php$ {
 }
 ```
 
-If $memcached_key not exists in cache, memcached return 404 status code.
-If there is some connection problem between nginx and memcached 502 is returned. 
-Errors 404 and 502 are handled by @fallback section - standard php-fpm call.
+If `$memcached_key` does not exists in cache, memcached will return `404` status code.
+If there is some connection problem between nginx and memcached `502` is returned. 
+Errors `404` and `502` are handled by `@fallback` section - standard php-fpm call.
 
-#### Passing $memcached_key to PHP
-For cache key consistence between nginx and PHP, 
-we can pass key to php-fpm using `fastcgi_param`.
+### Passing $memcached_key to PHP
+To ensure cache key consistence between nginx and PHP, 
+we pass key to php-fpm using `HTTP_X_MEMCACHED_KEY` fastcgi_param.
 
 ```
-    location @fallback {
-        # Pass memcache key as header to PHP
-        fastcgi_param  HTTP_X_MEMCACHED_KEY $memcached_key;
-        ...
-    }
+location @fallback {
+    # Pass memcache key as header to PHP
+    fastcgi_param HTTP_X_MEMCACHED_KEY $memcached_key;
+    ...
+}
 ```
 In PHP script it can be accessed through variable `$_SERVER['HTTP_X_MEMCACHED_KEY']`.
 
-#### Saving response to cache
-Script below prints time. If `x-memcached-key` header is set and `time`
-query param exists then response is stored in memcached for `time` seconds. 
+### Saving response to cache
+By default, script `time.php` prints current time. 
+If there is `HTTP_X_MEMCACHED_KEY` set and `time`
+param is present in query string then response is stored in memcached for `time` seconds. 
 
 ```php
-<?php
-$data = (new DateTime())->format('Y-m-d H:i:s');
-echo $data;
+<?php declare(strict_types=1);
 
-// store respone in memcached
-if (isset($_SERVER['HTTP_X_MEMCACHED_KEY']) && isset($_GET['time'])) {
-    $mem = new Memcached('nginx_memcached');
+function cache_nginx(string $data, int $ttl = 3600): string
+{
+    $key = $_SERVER['HTTP_X_MEMCACHED_KEY'] ?? null;
+    if ($ttl <= 0 || !is_string($key)) {
+        return $data;
+    }
+
+    $mem = new Memcached();
     $mem->addServer("127.0.0.1", 11211);
-    $mem->set(
-        $_SERVER['HTTP_X_MEMCACHED_KEY'],
-        $data,
-        time() + (int)$_GET['time']
-    );
+    $mem->set($key, $data, time() + $ttl);
+
+    return $data;
 }
+
+echo cache_nginx((new DateTime())->format('Y-m-d H:i:s'), intval($_GET['time'] ?? 0));
 ```
 
-#### Page structure
+### Hiding _ssi blocks
+We do not want to show ssi block to the world. We want them to accessible only by nginx ssi sub-request.
+To do tha we need set `internal` for all `/_ssi/*` requests:
 
-![SSI Components](https://raw.githubusercontent.com/crazy-goat/nginx_ssi_memcached/master/docs/ssi-components.png)
+```
+location /_ssi/ {
+    internal;
+}
+```

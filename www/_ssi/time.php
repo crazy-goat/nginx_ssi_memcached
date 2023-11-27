@@ -1,5 +1,4 @@
-<?php
-declare(strict_types=1);
+<?php declare(strict_types=1);
 function cache_nginx(string $data, int $ttl = 3600): string
 {
     $key = $_SERVER['HTTP_X_MEMCACHED_KEY'] ?? null;
@@ -14,4 +13,4 @@ function cache_nginx(string $data, int $ttl = 3600): string
     return $data;
 }
 
-echo cache_nginx((new DateTime())->format('Y-m-d H:i:s'), (int)($_GET['time'] ?? 0));
+echo cache_nginx((new DateTime())->format('Y-m-d H:i:s'), intval($_GET['time'] ?? 0));
